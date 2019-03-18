@@ -120,7 +120,7 @@ class UwedgeICA(BaseEstimator, TransformerMixin):
         self : object
             Returns self.
         """
-        X = check_array(X, ensure_2d=True)
+        #X = check_array(X, ensure_2d=True)
 
         n, dim = X.shape
 
@@ -143,8 +143,8 @@ class UwedgeICA(BaseEstimator, TransformerMixin):
         else:
             partition_indices = [partition_index]
 
-        for partition_index in partition_indices:
-            X, partition_index = check_X_y(X, partition_index)
+        #for partition_index in partition_indices:
+        #    X, partition_index = check_X_y(X, partition_index)
 
         X = X.T
 
@@ -158,7 +158,7 @@ class UwedgeICA(BaseEstimator, TransformerMixin):
         if self.timelags is not None:
             timelags.extend(self.timelags)
         no_timelags = len(timelags)
-        covmats = np.empty((no_partitions * no_timelags, dim, dim))
+        covmats = np.empty((no_partitions * no_timelags, dim, dim), dtype=X.dtype)
         idx = 0
         for partition_index in partition_indices:
             for partition in np.unique(partition_index):
@@ -180,7 +180,7 @@ class UwedgeICA(BaseEstimator, TransformerMixin):
             condition_threshold=self.condition_threshold)
 
         # normalise V
-        normaliser = np.diag(self.V_.dot(Rx0.dot(self.V_.T)))
+        normaliser = np.diag(self.V_.dot(Rx0.dot(self.V_.T.conj())))
         self.V_ = self.V_ / (
             np.sign(normaliser) * np.sqrt(np.abs(normaliser)))[:, None]
 
@@ -216,5 +216,5 @@ class UwedgeICA(BaseEstimator, TransformerMixin):
         X_transformed : array, shape (n_samples, n_components)
         """
         check_is_fitted(self, ['V_'])
-        X = check_array(X)
+        #X = check_array(X)
         return self.V_.dot(X.T).T
