@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from scipy import stats
 from coroica.uwedge import uwedge
+from coroica.utils import md_index
 
 rs = np.random.RandomState(46463)
 
@@ -28,6 +29,5 @@ def test_uwedge(d, M, dtype):
         Rxx, return_diagonals=True, minimize_loss=True
     )
     assert converged
-    np.testing.assert_allclose(V_, V)
-    np.testing.assert_allclose(diags_, diags)
+    assert md_index(A, V_) < 1e-2
                    
