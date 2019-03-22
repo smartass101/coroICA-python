@@ -306,7 +306,7 @@ class CoroICA(BaseEstimator, TransformerMixin):
             condition_threshold=self.condition_threshold)
 
         # normalise V
-        normaliser = np.diag(self.V_.dot(Rx0.dot(self.V_.T)))
+        normaliser = np.diag(self.V_.dot(Rx0.dot(self.V_.T.conj())))
         self.V_ = self.V_ / (
             np.sign(normaliser) * np.sqrt(np.abs(normaliser)))[:, None]
 
