@@ -158,7 +158,7 @@ class CoroICA(BaseEstimator, TransformerMixin):
         self : object
             Returns self.
         """
-        X = check_array(X, ensure_2d=True)
+        #X = check_array(X, ensure_2d=True)
 
         n, dim = X.shape
 
@@ -190,9 +190,9 @@ class CoroICA(BaseEstimator, TransformerMixin):
         else:
             partition_indices = [partition_index]
 
-        X, group_index = check_X_y(X, group_index)
-        for partition_index in partition_indices:
-            X, partition_index = check_X_y(X, partition_index)
+        #X, group_index = check_X_y(X, group_index)
+        #for partition_index in partition_indices:
+        #    X, partition_index = check_X_y(X, partition_index)
 
         X = X.T
 
@@ -215,7 +215,7 @@ class CoroICA(BaseEstimator, TransformerMixin):
                 for group in np.unique(group_index):
                     no_pairs += len(
                         np.unique(partition_index[group_index == group]))
-                covmats = np.empty((no_pairs * no_timelags, dim, dim))
+                covmats = np.empty((no_pairs * no_timelags, dim, dim), dtype=X.dtype)
                 idx = 0
                 for group in np.unique(group_index):
                     unique_partitions = np.unique(
@@ -342,7 +342,7 @@ class CoroICA(BaseEstimator, TransformerMixin):
         X_transformed : array, shape (n_samples, n_components)
         """
         check_is_fitted(self, ['V_'])
-        X = check_array(X)
+        #X = check_array(X)
         return self.V_.dot(X.T).T
 
 

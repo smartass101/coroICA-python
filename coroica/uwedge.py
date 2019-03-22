@@ -36,12 +36,12 @@ def uwedge(Rx,
     # Initial guess
     if init is None and n_components == d:
         if Rx.shape[0] > 0:
-            E, H = lin.eigh(Rx0)
+            E, H = lin.eig(Rx0)
             V = np.dot(np.diag(1. / np.sqrt(np.abs(E))), H.T.conj())
         else:
             V = np.eye(d)
     elif init is None:
-        E, H = lin.eigh(Rx0)
+        E, H = lin.eig(Rx0)
         mat = np.hstack([np.diag(1. / np.sqrt(np.abs(E[:n_components]))),
                          np.zeros((n_components, d - n_components))])
         V = np.dot(mat, H.T.conj())
@@ -52,19 +52,24 @@ def uwedge(Rx,
 
     current_best = [None, np.inf, 0, None]
 
+    TINY = np.finfo(V.dtype).eps
+
     for iteration in itertools.count():
         # 1) Generate Rs
         Rs = np.stack([V.dot(Rxx.dot(V.T.conj())) for Rxx in Rx])
 
         # 2) Use Rs to construct A, equation (24) in paper with W=Id
         # 3) Set A1=Id and substitute off-diagonals
-        Rsdiag = Rs.diagonal(axis1=1, axis2=2)  #m: Rs
-        Rsdiagprod = np.real(Rsdiag.T.conj().dot(Rsdiag)) #m: B^H
-        Rsdpd = Rsdiagprod.diagonal() # m: Q^H
-        denom_mat = np.outer(Rsdpd, Rsdpd.conj()) - Rsdiagprod**2 #m: -D0
-        Rkl = np.einsum('ill,ikl->kl', Rs, Rs.conj()) #m: C1
-        num_mat = Rsdpd[:, None] * Rkl - Rsdiagprod * Rkl.T.conj() #m: -A0 num
-        denom_mat[denom_mat == 0] = np.finfo(V.dtype).eps
+        Rsdiag = Rs.diagonal(axis1=1, axis2=2)
+        Rsdiagprod = np.real(Rsdiag.T.conj().dot(Rsdiag))
+        Rsdpd = Rsdiagprod.diagonal()
+        denom_mat = np.outer(Rsdpd, Rsdpd) - Rsdiagprod**2
+        Rsdc = Rsdiag.conj()
+        Rkl = np.einsum('il...,ikl->kl', Rsdc, Rs)
+        Rlk = np.einsum('il...,ilk->kl', Rsdc, Rs)
+        Rkl = (Rkl + np.conj(Rlk)) / 2
+        num_mat = Rsdpd[:,np.newaxis] * Rkl - Rsdiagprod * Rkl.T.conj()
+        denom_mat[denom_mat == 0] = TINY
         A = num_mat / (denom_mat + np.eye(n_components))
         np.fill_diagonal(A, 1)
 
@@ -85,7 +90,7 @@ def uwedge(Rx,
                 current_best = [V, meanoffdiag, iteration, diagonals]
 
         # 6) Check convergence
-        changeinV = np.max(np.abs(V.real - Vold.real))
+        changeinV = np.max(np.abs(V - Vold))
         if iteration >= n_iter_max - 1:
             converged = False
             break
